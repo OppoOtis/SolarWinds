@@ -17,7 +17,7 @@ MonoBehaviour:
   heightMapCompute: {fileID: 7200000, guid: 13008f929df404f2c9c4d64443449aed, type: 3}
   perturbVertices: 1
   perturbCompute: {fileID: 7200000, guid: 0cc4782d709194aa5a22ed5e9ab8bf09, type: 3}
-  perturbStrength: 0.7
+  perturbStrength: 1
   plateauHeight: 0.27
   plateauSmoothing: 0
   continentNoise:
