@@ -32,6 +32,7 @@ public class LODHandler : MonoBehaviour {
 		DebugLODInfo ();
 
 		if (Application.isPlaying) {
+			Debug.Log("deze code is dom en niet te lezen");
 			HandleLODs ();
 		}
 
@@ -43,6 +44,7 @@ public class LODHandler : MonoBehaviour {
 				float screenHeight = CalculateScreenHeight (bodies[i]);
 				int lodIndex = CalculateLODIndex (screenHeight);
 				generators[i].SetLOD (lodIndex);
+				//Debug.Log("Wooweewawa");
 			}
 
 		}

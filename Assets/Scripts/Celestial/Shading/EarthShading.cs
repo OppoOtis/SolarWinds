@@ -18,8 +18,7 @@ public class EarthShading : CelestialBodyShading {
 
 		material.SetVector ("heightMinMax", heightMinMax);
 		material.SetFloat ("oceanLevel", oceanLevel);
-		material.SetFloat ("bodyScale", bodyScale);
-
+		material.SetFloat("bodyScale", bodyScale);
 		if (randomize) {
 			SetRandomColours (material);
 			ApplyColours (material, randomizedCols);

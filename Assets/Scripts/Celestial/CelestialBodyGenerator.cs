@@ -8,7 +8,8 @@ public class CelestialBodyGenerator : MonoBehaviour {
 	public enum PreviewMode { LOD0, LOD1, LOD2, CollisionRes }
 	public ResolutionSettings resolutionSettings;
 	public PreviewMode previewMode;
-
+	public GameObject Terrainmesh;
+	
 	public bool logTimers;
 
 	public CelestialBodySettings body;
@@ -47,6 +48,11 @@ public class CelestialBodyGenerator : MonoBehaviour {
 		if (InEditMode) {
 			HandleEditModeGeneration ();
 		}
+		else
+		{
+			
+			HandleGameModeGeneration();
+		}
 
 		if (Input.GetKeyDown (KeyCode.O)) {
 			//body.shading.atmosphereSettings.useOptimVersion = !body.shading.atmosphereSettings.useOptimVersion;
@@ -64,7 +70,7 @@ public class CelestialBodyGenerator : MonoBehaviour {
 	// • creates its own instances of materials so multiple bodies can exist with their own shading
 	// • doesn't support updating of shape/shading values once generated
 	void HandleGameModeGeneration () {
-		if (CanGenerateMesh ()) {
+		/*if (CanGenerateMesh ()) {
 			Dummy ();
 
 			// Generate LOD meshes
@@ -76,7 +82,7 @@ public class CelestialBodyGenerator : MonoBehaviour {
 					heightMinMax = lodTerrainHeightMinMax;
 				}
 			}
-
+			
 			// Generate collision mesh
 			GenerateCollisionMesh (resolutionSettings.collider);
 
@@ -103,20 +109,24 @@ public class CelestialBodyGenerator : MonoBehaviour {
 		}
 
 		ReleaseAllBuffers ();
+		SetLOD(0); //Replace this with a function actually using LOD's or some shit
+		*/
+		HandleEditModeGeneration();
+		resolutionSettings.lod0 = Mathf.Min(resolutionSettings.lod0 +10, 500);
 	}
 
 	// Handles creation of celestial body in the editor
 	// This allows for updating the shape/shading settings
 	void HandleEditModeGeneration () {
-		if (InEditMode) {
+		//if (InEditMode) {
 			ComputeHelper.shouldReleaseEditModeBuffers -= ReleaseAllBuffers;
 			ComputeHelper.shouldReleaseEditModeBuffers += ReleaseAllBuffers;
-		}
+		//}
 
 		if (CanGenerateMesh ()) {
 			// Update shape settings and shading noise
-			if (shapeSettingsUpdated) {
-				shapeSettingsUpdated = false;
+			//if (shapeSettingsUpdated) {
+				//shapeSettingsUpdated = false;
 				shadingNoiseSettingsUpdated = false;
 				Dummy ();
 
@@ -125,9 +135,9 @@ public class CelestialBodyGenerator : MonoBehaviour {
 
 				LogTimer (terrainMeshTimer, "Generate terrain mesh");
 				DrawEditModeMesh ();
-			}
+			//}
 			// If only shading noise has changed, update it separately from shape to save time
-			else if (shadingNoiseSettingsUpdated) {
+			/*else*/ if (shadingNoiseSettingsUpdated) {
 				shadingNoiseSettingsUpdated = false;
 				ComputeHelper.CreateStructuredBuffer<Vector3> (ref vertexBuffer, previewMesh.vertices);
 				body.shading.Initialize (body.shape);
@@ -148,6 +158,7 @@ public class CelestialBodyGenerator : MonoBehaviour {
 
 			}
 		}
+		OnShapeSettingChanged();
 
 		// Update shading
 		if (body.shading) {
@@ -159,6 +170,7 @@ public class CelestialBodyGenerator : MonoBehaviour {
 		ReleaseAllBuffers (); //
 	}
 
+	//Stop being stupid this code is never used xx
 	public void SetLOD (int lodIndex) {
 		if (lodIndex != activeLODIndex && terrainMeshFilter) {
 			activeLODIndex = lodIndex;
@@ -290,7 +302,8 @@ public class CelestialBodyGenerator : MonoBehaviour {
 		mesh.indexFormat = (numVertices < vertexLimit16Bit) ? UnityEngine.Rendering.IndexFormat.UInt16 : UnityEngine.Rendering.IndexFormat.UInt32;
 	}
 
-	void DrawEditModeMesh () {
+	void DrawEditModeMesh ()
+	{
 		GameObject terrainHolder = GetOrCreateMeshObject ("Terrain Mesh", previewMesh, body.shading.terrainMaterial);
 	}
 
@@ -299,6 +312,7 @@ public class CelestialBodyGenerator : MonoBehaviour {
 	GameObject GetOrCreateMeshObject (string name, Mesh mesh, Material material) {
 		// Find/create object
 		var child = transform.Find (name);
+		//var child = Terrainmesh;
 		if (!child) {
 			child = new GameObject (name).transform;
 			child.parent = transform;
@@ -320,12 +334,12 @@ public class CelestialBodyGenerator : MonoBehaviour {
 			renderer = child.gameObject.AddComponent<MeshRenderer> ();
 		}
 		renderer.sharedMaterial = material;
-
+		
 		return child.gameObject;
 	}
 
 	public int PickTerrainRes () {
-		if (!Application.isPlaying) {
+		//if (!Application.isPlaying) {
 			switch (previewMode) {
 				case PreviewMode.LOD0:
 					return resolutionSettings.lod0;
@@ -336,7 +350,7 @@ public class CelestialBodyGenerator : MonoBehaviour {
 				case PreviewMode.CollisionRes:
 					return resolutionSettings.collider;
 			}
-		}
+		//}
 
 		return 0;
 
@@ -398,7 +412,7 @@ public class CelestialBodyGenerator : MonoBehaviour {
 	}
 
 	bool CanGenerateMesh () {
-		return ComputeHelper.CanRunEditModeCompute && body.shape && body.shape.heightMapCompute;
+		return /*ComputeHelper.CanRunEditModeCompute &&*/ body.shape && body.shape.heightMapCompute;
 	}
 
 	void LogTimer (System.Diagnostics.Stopwatch sw, string text) {
