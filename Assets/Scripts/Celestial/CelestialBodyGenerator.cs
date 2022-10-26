@@ -111,8 +111,14 @@ public class CelestialBodyGenerator : MonoBehaviour {
 		ReleaseAllBuffers ();
 		SetLOD(0); //Replace this with a function actually using LOD's or some shit
 		*/
-		HandleEditModeGeneration();
-		resolutionSettings.lod0 = Mathf.Min(resolutionSettings.lod0 +10, 500);
+
+		int x = resolutionSettings.lod0;
+		resolutionSettings.lod0 = Mathf.Min(resolutionSettings.lod0 +10, 300);
+		if (x != resolutionSettings.lod0)
+		{
+			OnShapeSettingChanged();
+			HandleEditModeGeneration();
+		}
 	}
 
 	// Handles creation of celestial body in the editor
@@ -125,7 +131,7 @@ public class CelestialBodyGenerator : MonoBehaviour {
 
 		if (CanGenerateMesh ()) {
 			// Update shape settings and shading noise
-			//if (shapeSettingsUpdated) {
+			if (shapeSettingsUpdated) {
 				//shapeSettingsUpdated = false;
 				shadingNoiseSettingsUpdated = false;
 				Dummy ();
@@ -135,9 +141,9 @@ public class CelestialBodyGenerator : MonoBehaviour {
 
 				LogTimer (terrainMeshTimer, "Generate terrain mesh");
 				DrawEditModeMesh ();
-			//}
+			}
 			// If only shading noise has changed, update it separately from shape to save time
-			/*else*/ if (shadingNoiseSettingsUpdated) {
+			else if (shadingNoiseSettingsUpdated) {
 				shadingNoiseSettingsUpdated = false;
 				ComputeHelper.CreateStructuredBuffer<Vector3> (ref vertexBuffer, previewMesh.vertices);
 				body.shading.Initialize (body.shape);
@@ -158,7 +164,6 @@ public class CelestialBodyGenerator : MonoBehaviour {
 
 			}
 		}
-		OnShapeSettingChanged();
 
 		// Update shading
 		if (body.shading) {
@@ -417,7 +422,7 @@ public class CelestialBodyGenerator : MonoBehaviour {
 
 	void LogTimer (System.Diagnostics.Stopwatch sw, string text) {
 		if (logTimers) {
-			Debug.Log (text + " " + sw.ElapsedMilliseconds + " ms.");
+			//Debug.Log (text + " " + sw.ElapsedMilliseconds + " ms.");
 		}
 	}
 
