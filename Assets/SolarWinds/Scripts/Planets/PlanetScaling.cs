@@ -15,6 +15,8 @@ public class PlanetScaling : MonoBehaviour
         if (setOffset)
         {
             transform.position = new Vector3(planetInteractable.transform.position.x + distanceFromInteractable, planetInteractable.transform.position.y, planetInteractable.transform.position.z);
+            planetInteractable.transform.localScale = planetMesh.transform.localScale;
+            transform.localScale = new Vector3(planetMesh.transform.localScale.x * 0.25f, planetMesh.transform.localScale.y * 0.25f, planetMesh.transform.localScale.z * 0.25f);
         }
         else
         {

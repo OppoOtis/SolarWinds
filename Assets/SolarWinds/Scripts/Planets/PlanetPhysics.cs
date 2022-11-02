@@ -24,7 +24,7 @@ public class PlanetPhysics : MonoBehaviour
     [Range(-45f, 45f)]
     public float rotationPitch = 0;
 
-    [Range(1f, 10f)]
+    [Range(0f, 1000f)]
     public float distanceFromSun = 5;
 
     private void Update()
@@ -33,7 +33,7 @@ public class PlanetPhysics : MonoBehaviour
         orbitPitchPivot.transform.localRotation = Quaternion.Euler(orbitPitch, 0, 0);
         if (gameObject.GetComponent<OrbitPosition>().isActiveAndEnabled == false)
         {
-            orbitPivot.transform.Rotate(new Vector3(0, orbitSpeed, 0) * Time.deltaTime);
+            orbitPivot.transform.Rotate(new Vector3(0, orbitSpeed/100, 0) * Time.deltaTime);
             dontMoveInteractable = false;
         }
         if (!dontMoveInteractable)
@@ -43,9 +43,9 @@ public class PlanetPhysics : MonoBehaviour
         dontMoveInteractable = true;
 
         //Vector3 centerRotation = new Vector3(0, -orbitSpeed, 0,);
-        centerPivot.transform.Rotate(new Vector3(0, -orbitSpeed, 0) * Time.deltaTime);
+        centerPivot.transform.Rotate(new Vector3(0, -orbitSpeed/100, 0) * Time.deltaTime);
         centerPitchPivot.transform.localRotation = Quaternion.Euler(0, 0, rotationPitch);
-        planetMesh.transform.Rotate(new Vector3(0, rotationSpeed, 0) * Time.deltaTime);
+        planetMesh.transform.Rotate(new Vector3(0, rotationSpeed/100, 0) * Time.deltaTime);
 
         centerPivot.transform.localPosition = new Vector3(0, 0, distanceFromSun);
     }
