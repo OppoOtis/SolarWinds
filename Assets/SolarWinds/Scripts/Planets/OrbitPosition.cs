@@ -6,6 +6,8 @@ public class OrbitPosition : MonoBehaviour
 {
     public PlanetPhysics planetPhysics;
     public GameObject planetInteractable;
+    public GameObject centerPoint;
+    public GameObject orbitPivot;
 
     public float pitch;
     public float yaw;
@@ -18,11 +20,12 @@ public class OrbitPosition : MonoBehaviour
 
     private void UpdateOrbitPosition()
     {
+        planetPhysics.dontMoveInteractable = true;
         Vector3 centerVector = transform.position;
         distance = Vector3.Distance(planetInteractable.transform.position, transform.position);
-        Vector3 side1 = new Vector3(distance, 0, 0) - transform.position;
-        Vector3 side2 = transform.position - new Vector3(planetInteractable.transform.position.x, 0, planetInteractable.transform.position.z);
-        yaw = Vector3.Angle(side1, side2);
+        planetPhysics.orbitYaw = centerPoint.transform.rotation.eulerAngles.y;
+        planetPhysics.orbitPitch = centerPoint.transform.rotation.eulerAngles.x;
+        planetPhysics.distanceFromSun = distance;
     }
 
 

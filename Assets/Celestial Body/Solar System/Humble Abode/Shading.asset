@@ -31,14 +31,14 @@ MonoBehaviour:
     steepLow: {r: 0.5294118, g: 0.49019608, b: 0.1882353, a: 1}
     steepHigh: {r: 0.14901961, g: 0.06666667, b: 0, a: 1}
   randomizedCols:
-    shoreColLow: {r: 0.6610731, g: 0.93641275, b: 0.91964614, a: 1}
-    shoreColHigh: {r: 0.5794404, g: 0.59576344, b: 0.72566515, a: 1}
-    flatColLowA: {r: 0.3887262, g: 0.70226425, b: 0.31162, a: 1}
-    flatColHighA: {r: 0.25796574, g: 0.48027343, b: 0.45484808, a: 1}
-    flatColLowB: {r: 0.43731505, g: 0.78855354, b: 0.7969108, a: 1}
-    flatColHighB: {r: 0.25065467, g: 0.5751314, b: 0.33702466, a: 1}
-    steepLow: {r: 0.337515, g: 0.44176316, b: 0.19630657, a: 1}
-    steepHigh: {r: 0.17255151, g: 0.08410163, b: 0.04438066, a: 1}
+    shoreColLow: {r: 0.90680385, g: 0.66877836, b: 0.7628168, a: 1}
+    shoreColHigh: {r: 0.5739023, g: 0.40820104, b: 0.6780656, a: 1}
+    flatColLowA: {r: 0.36981723, g: 0.3235865, b: 0.78633124, a: 1}
+    flatColHighA: {r: 0.23352651, g: 0.3630658, b: 0.5407507, a: 1}
+    flatColLowB: {r: 0.6459541, g: 0.7772487, b: 0.39552838, a: 1}
+    flatColHighB: {r: 0.27407354, g: 0.5295039, b: 0.36897376, a: 1}
+    steepLow: {r: 0.2043691, g: 0.5479622, b: 0.49573916, a: 1}
+    steepHigh: {r: 0.13191049, g: 0.15557624, b: 0.34488893, a: 1}
   detailWarpNoise:
     numLayers: 4
     lacunarity: 2
