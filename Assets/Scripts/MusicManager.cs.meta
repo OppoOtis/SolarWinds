@@ -3,7 +3,13 @@ guid: 121678a8d7754694298c36d43eb7bfe3
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - Track1: {fileID: 2379487744786571030, guid: d9eeb916372dd364a9e7385b10db7431,
+      type: 3}
+  - Track2: {fileID: 5348748042724428378, guid: e0ef43121c4bbc94b8c92181c1c36be9,
+      type: 3}
+  - Track3: {fileID: 6417410320983244069, guid: 74395a2882db2d04189cfd31e5a52d2c,
+      type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

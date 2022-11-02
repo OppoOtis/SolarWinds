@@ -13,19 +13,20 @@ public class MusicManager : MonoBehaviour
     private GameObject currentTrack;
 
     private float[] trackVolumes;
-    private int currentChannel;
+    private int currentChannel = 0;
     private void Awake()
     {
         tracks[0] = Track1;
         tracks[1] = Track2;
         tracks[2] = Track3;
         
-        currentTrack = tracks[Random.Range(0, tracks.Length)];
+        currentTrack = Instantiate(tracks[Random.Range(0, tracks.Length)]);
 
         trackVolumes = new float[currentTrack.transform.childCount];
 
         foreach (AudioSource channel in currentTrack.transform.GetComponentsInChildren<AudioSource>())
         {
+            Debug.Log(currentChannel);
             trackVolumes[currentChannel] = channel.volume;
             channel.volume = 0.0f;
             currentChannel++;
