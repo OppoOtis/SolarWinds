@@ -3,68 +3,82 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class CelestialBodyGenerator : MonoBehaviour {
+public class CelestialBodyGenerator : MonoBehaviour
+{
 
-	public enum PreviewMode { LOD0, LOD1, LOD2, CollisionRes }
-	public ResolutionSettings resolutionSettings;
-	public PreviewMode previewMode;
+    public enum PreviewMode { LOD0, LOD1, LOD2, CollisionRes }
+    public ResolutionSettings resolutionSettings;
+    public PreviewMode previewMode;
+    public GameObject Terrainmesh;
 
-	public bool logTimers;
+    public bool logTimers;
 
-	public CelestialBodySettings body;
+    public CelestialBodySettings body;
 
-	bool debugDoubleUpdate = true;
-	int debug_numUpdates;
+    bool debugDoubleUpdate = true;
+    int debug_numUpdates;
 
-	// Private variables
-	Mesh previewMesh;
-	Mesh collisionMesh;
-	Mesh[] lodMeshes;
+    // Private variables
+    Mesh previewMesh;
+    Mesh collisionMesh;
+    Mesh[] lodMeshes;
 
-	ComputeBuffer vertexBuffer;
+    ComputeBuffer vertexBuffer;
 
-	bool shapeSettingsUpdated;
-	bool shadingNoiseSettingsUpdated;
-	Camera cam;
+    bool shapeSettingsUpdated;
+    bool shadingNoiseSettingsUpdated;
+    Camera cam;
 
-	Vector2 heightMinMax;
+    Vector2 heightMinMax;
 
-	// Game mode data 
-	int activeLODIndex = -1;
-	MeshFilter terrainMeshFilter;
-	Material terrainMatInstance;
+    // Game mode data 
+    int activeLODIndex = -1;
+    MeshFilter terrainMeshFilter;
+    Material terrainMatInstance;
 
-	static Dictionary<int, SphereMesh> sphereGenerators;
+    static Dictionary<int, SphereMesh> sphereGenerators;
 
-	void Start () {
-		if (InGameMode) {
-			cam = Camera.main;
-			HandleGameModeGeneration ();
-		}
-	}
+    void Start()
+    {
+        if (InGameMode)
+        {
+            cam = Camera.main;
+            HandleGameModeGeneration();
+        }
+    }
 
-	void Update () {
-		if (InEditMode) {
-			HandleEditModeGeneration ();
-		}
+    void Update()
+    {
+        if (InEditMode)
+        {
+            HandleEditModeGeneration();
+        }
+        else
+        {
 
-		if (Input.GetKeyDown (KeyCode.O)) {
-			//body.shading.atmosphereSettings.useOptimVersion = !body.shading.atmosphereSettings.useOptimVersion;
-		}
+            HandleGameModeGeneration();
+        }
 
-		if (Input.GetKeyDown (KeyCode.I)) {
-			//	var m = terrainMeshFilter.GetComponent<MeshRenderer> ();
-			//m.enabled = !m.enabled;
-		}
-	}
+        if (Input.GetKeyDown(KeyCode.O))
+        {
+            //body.shading.atmosphereSettings.useOptimVersion = !body.shading.atmosphereSettings.useOptimVersion;
+        }
 
-	// Handles creation of celestial body when entering game mode
-	// This differs from the edit-mode version in the following ways:
-	// • creates all LOD meshes and stores them in mesh array (to be picked based on player position)
-	// • creates its own instances of materials so multiple bodies can exist with their own shading
-	// • doesn't support updating of shape/shading values once generated
-	void HandleGameModeGeneration () {
-		if (CanGenerateMesh ()) {
+        if (Input.GetKeyDown(KeyCode.I))
+        {
+            //	var m = terrainMeshFilter.GetComponent<MeshRenderer> ();
+            //m.enabled = !m.enabled;
+        }
+    }
+
+    // Handles creation of celestial body when entering game mode
+    // This differs from the edit-mode version in the following ways:
+    // • creates all LOD meshes and stores them in mesh array (to be picked based on player position)
+    // • creates its own instances of materials so multiple bodies can exist with their own shading
+    // • doesn't support updating of shape/shading values once generated
+    void HandleGameModeGeneration()
+    {
+        /*if (CanGenerateMesh ()) {
 			Dummy ();
 
 			// Generate LOD meshes
@@ -76,7 +90,7 @@ public class CelestialBodyGenerator : MonoBehaviour {
 					heightMinMax = lodTerrainHeightMinMax;
 				}
 			}
-
+			
 			// Generate collision mesh
 			GenerateCollisionMesh (resolutionSettings.collider);
 
@@ -103,356 +117,434 @@ public class CelestialBodyGenerator : MonoBehaviour {
 		}
 
 		ReleaseAllBuffers ();
-	}
+		SetLOD(0); //Replace this with a function actually using LOD's or some shit
+		*/
 
-	// Handles creation of celestial body in the editor
-	// This allows for updating the shape/shading settings
-	void HandleEditModeGeneration () {
-		if (InEditMode) {
-			ComputeHelper.shouldReleaseEditModeBuffers -= ReleaseAllBuffers;
-			ComputeHelper.shouldReleaseEditModeBuffers += ReleaseAllBuffers;
-		}
+        if (shapeSettingsUpdated)
+        {
+            HandleEditModeGeneration();
+        }
+        int x = resolutionSettings.lod0;
+        //resolutionSettings.lod0 = Mathf.Min(resolutionSettings.lod0 +10, 300);
+        if (x != resolutionSettings.lod0)
+        {
+            OnShapeSettingChanged();
+            HandleEditModeGeneration();
+        }
+        Debug.Log(shapeSettingsUpdated.ToString());
 
-		if (CanGenerateMesh ()) {
-			// Update shape settings and shading noise
-			if (shapeSettingsUpdated) {
-				shapeSettingsUpdated = false;
-				shadingNoiseSettingsUpdated = false;
-				Dummy ();
+    }
 
-				var terrainMeshTimer = System.Diagnostics.Stopwatch.StartNew ();
-				heightMinMax = GenerateTerrainMesh (ref previewMesh, PickTerrainRes ());
+    // Handles creation of celestial body in the editor
+    // This allows for updating the shape/shading settings
+    void HandleEditModeGeneration()
+    {
+        //if (InEditMode) {
+        ComputeHelper.shouldReleaseEditModeBuffers -= ReleaseAllBuffers;
+        ComputeHelper.shouldReleaseEditModeBuffers += ReleaseAllBuffers;
+        //}
 
-				LogTimer (terrainMeshTimer, "Generate terrain mesh");
-				DrawEditModeMesh ();
-			}
-			// If only shading noise has changed, update it separately from shape to save time
-			else if (shadingNoiseSettingsUpdated) {
-				shadingNoiseSettingsUpdated = false;
-				ComputeHelper.CreateStructuredBuffer<Vector3> (ref vertexBuffer, previewMesh.vertices);
-				body.shading.Initialize (body.shape);
-				Vector4[] shadingData = body.shading.GenerateShadingData (vertexBuffer);
-				previewMesh.SetUVs (0, shadingData);
+        if (CanGenerateMesh())
+        {
+            // Update shape settings and shading noise
+            if (shapeSettingsUpdated)
+            {
+                //shapeSettingsUpdated = false;
+                shadingNoiseSettingsUpdated = false;
+                Dummy();
 
-				// Sometimes when changing a colour property, invalid data is returned from compute shader
-				// Running the shading a second time fixes it.
-				// Not sure if this is my bug, or Unity's (TODO: investigate)
-				debug_numUpdates++;
-				if (debugDoubleUpdate && debug_numUpdates < 2) {
-					shadingNoiseSettingsUpdated = true;
-					HandleEditModeGeneration ();
-				}
-				if (debug_numUpdates == 2) {
-					debug_numUpdates = 0;
-				}
+                var terrainMeshTimer = System.Diagnostics.Stopwatch.StartNew();
+                heightMinMax = GenerateTerrainMesh(ref previewMesh, PickTerrainRes());
 
-			}
-		}
+                LogTimer(terrainMeshTimer, "Generate terrain mesh");
+                DrawEditModeMesh();
+            }
+            // If only shading noise has changed, update it separately from shape to save time
+            else if (shadingNoiseSettingsUpdated)
+            {
+                shadingNoiseSettingsUpdated = false;
+                ComputeHelper.CreateStructuredBuffer<Vector3>(ref vertexBuffer, previewMesh.vertices);
+                body.shading.Initialize(body.shape);
+                Vector4[] shadingData = body.shading.GenerateShadingData(vertexBuffer);
+                previewMesh.SetUVs(0, shadingData);
 
-		// Update shading
-		if (body.shading) {
-			// Set material properties
-			body.shading.Initialize (body.shape);
-			body.shading.SetTerrainProperties (body.shading.terrainMaterial, heightMinMax, BodyScale);
-		}
+                // Sometimes when changing a colour property, invalid data is returned from compute shader
+                // Running the shading a second time fixes it.
+                // Not sure if this is my bug, or Unity's (TODO: investigate)
+                debug_numUpdates++;
+                if (debugDoubleUpdate && debug_numUpdates < 2)
+                {
+                    shadingNoiseSettingsUpdated = true;
+                    HandleEditModeGeneration();
+                }
+                if (debug_numUpdates == 2)
+                {
+                    debug_numUpdates = 0;
+                }
 
-		ReleaseAllBuffers (); //
-	}
+            }
+        }
 
-	public void SetLOD (int lodIndex) {
-		if (lodIndex != activeLODIndex && terrainMeshFilter) {
-			activeLODIndex = lodIndex;
-			terrainMeshFilter.sharedMesh = lodMeshes[lodIndex];
-		}
-	}
+        // Update shading
+        if (body.shading)
+        {
+            // Set material properties
+            body.shading.Initialize(body.shape);
+            body.shading.SetTerrainProperties(body.shading.terrainMaterial, heightMinMax, BodyScale);
+        }
 
-	public void OnShapeSettingChanged () {
-		shapeSettingsUpdated = true;
-	}
+        shapeSettingsUpdated = false;
+        ReleaseAllBuffers(); //
+    }
 
-	public void OnShadingNoiseSettingChanged () {
-		shadingNoiseSettingsUpdated = true;
-	}
+    //Stop being stupid this code is never used xx
+    public void SetLOD(int lodIndex)
+    {
+        if (lodIndex != activeLODIndex && terrainMeshFilter)
+        {
+            activeLODIndex = lodIndex;
+            terrainMeshFilter.sharedMesh = lodMeshes[lodIndex];
+        }
+    }
 
-	void OnValidate () {
-		if (body) {
-			if (body.shape) {
-				body.shape.OnSettingChanged -= OnShapeSettingChanged;
-				body.shape.OnSettingChanged += OnShapeSettingChanged;
-			}
-			if (body.shading) {
-				body.shading.OnSettingChanged -= OnShadingNoiseSettingChanged;
-				body.shading.OnSettingChanged += OnShadingNoiseSettingChanged;
-			}
-		}
+    public void OnShapeSettingChanged()
+    {
+        shapeSettingsUpdated = true;
+    }
 
-		if (resolutionSettings != null) {
-			resolutionSettings.ClampResolutions ();
-		}
-		OnShapeSettingChanged ();
-	}
+    public void OnShadingNoiseSettingChanged()
+    {
+        shadingNoiseSettingsUpdated = true;
+    }
 
-	void Dummy () {
-		// Crude fix for a problem I was having where the values in the vertex buffer were *occasionally* all zero at start of game
-		// This function runs the compute shader once with single dummy input, after which it seems the problem doesn't occur
-		// (Waiting until Time.frameCount > 3 before generating is another gross hack that seems to fix the problem)
-		// I don't know why...
-		Vector3[] vertices = new Vector3[] { Vector3.zero };
-		ComputeHelper.CreateStructuredBuffer<Vector3> (ref vertexBuffer, vertices);
-		body.shape.CalculateHeights (vertexBuffer);
-	}
+    void OnValidate()
+    {
+        if (body)
+        {
+            if (body.shape)
+            {
+                body.shape.OnSettingChanged -= OnShapeSettingChanged;
+                body.shape.OnSettingChanged += OnShapeSettingChanged;
+            }
+            if (body.shading)
+            {
+                body.shading.OnSettingChanged -= OnShadingNoiseSettingChanged;
+                body.shading.OnSettingChanged += OnShadingNoiseSettingChanged;
+            }
+        }
 
-	// Generates terrain mesh based on heights generated by the Shape object
-	// Shading data from the Shading object is stored in the mesh uvs
-	// Returns the min/max height of the terrain
-	Vector2 GenerateTerrainMesh (ref Mesh mesh, int resolution) {
-		var (vertices, triangles) = CreateSphereVertsAndTris (resolution);
-		ComputeHelper.CreateStructuredBuffer<Vector3> (ref vertexBuffer, vertices);
+        if (resolutionSettings != null)
+        {
+            resolutionSettings.ClampResolutions();
+        }
+        OnShapeSettingChanged();
+    }
 
-		float edgeLength = (vertices[triangles[0]] - vertices[triangles[1]]).magnitude;
+    void Dummy()
+    {
+        // Crude fix for a problem I was having where the values in the vertex buffer were *occasionally* all zero at start of game
+        // This function runs the compute shader once with single dummy input, after which it seems the problem doesn't occur
+        // (Waiting until Time.frameCount > 3 before generating is another gross hack that seems to fix the problem)
+        // I don't know why...
+        Vector3[] vertices = new Vector3[] { Vector3.zero };
+        ComputeHelper.CreateStructuredBuffer<Vector3>(ref vertexBuffer, vertices);
+        body.shape.CalculateHeights(vertexBuffer);
+    }
 
-		// Set heights
-		float[] heights = body.shape.CalculateHeights (vertexBuffer);
+    // Generates terrain mesh based on heights generated by the Shape object
+    // Shading data from the Shading object is stored in the mesh uvs
+    // Returns the min/max height of the terrain
+    Vector2 GenerateTerrainMesh(ref Mesh mesh, int resolution)
+    {
+        var (vertices, triangles) = CreateSphereVertsAndTris(resolution);
+        ComputeHelper.CreateStructuredBuffer<Vector3>(ref vertexBuffer, vertices);
 
-		// Perturb vertices to give terrain a less perfectly smooth appearance
-		if (body.shape.perturbVertices && body.shape.perturbCompute) {
-			ComputeShader perturbShader = body.shape.perturbCompute;
-			float maxperturbStrength = body.shape.perturbStrength * edgeLength / 2;
+        float edgeLength = (vertices[triangles[0]] - vertices[triangles[1]]).magnitude;
 
-			perturbShader.SetBuffer (0, "points", vertexBuffer);
-			perturbShader.SetInt ("numPoints", vertices.Length);
-			perturbShader.SetFloat ("maxStrength", maxperturbStrength);
+        // Set heights
+        float[] heights = body.shape.CalculateHeights(vertexBuffer);
 
-			ComputeHelper.Run (perturbShader, vertices.Length);
-			Vector3[] pertData = new Vector3[vertices.Length];
-			vertexBuffer.GetData (vertices);
-		}
+        // Perturb vertices to give terrain a less perfectly smooth appearance
+        if (body.shape.perturbVertices && body.shape.perturbCompute)
+        {
+            ComputeShader perturbShader = body.shape.perturbCompute;
+            float maxperturbStrength = body.shape.perturbStrength * edgeLength / 2;
 
-		// Calculate terrain min/max height and set heights of vertices
-		float minHeight = float.PositiveInfinity;
-		float maxHeight = float.NegativeInfinity;
-		for (int i = 0; i < heights.Length; i++) {
-			float height = heights[i];
-			vertices[i] *= height;
-			minHeight = Mathf.Min (minHeight, height);
-			maxHeight = Mathf.Max (maxHeight, height);
-		}
+            perturbShader.SetBuffer(0, "points", vertexBuffer);
+            perturbShader.SetInt("numPoints", vertices.Length);
+            perturbShader.SetFloat("maxStrength", maxperturbStrength);
 
-		// Create mesh
-		CreateMesh (ref mesh, vertices.Length);
-		mesh.SetVertices (vertices);
-		mesh.SetTriangles (triangles, 0, true);
-		mesh.RecalculateNormals (); //
+            ComputeHelper.Run(perturbShader, vertices.Length);
+            Vector3[] pertData = new Vector3[vertices.Length];
+            vertexBuffer.GetData(vertices);
+        }
 
-		// Shading noise data
-		body.shading.Initialize (body.shape);
-		Vector4[] shadingData = body.shading.GenerateShadingData (vertexBuffer);
-		mesh.SetUVs (0, shadingData);
+        // Calculate terrain min/max height and set heights of vertices
+        float minHeight = float.PositiveInfinity;
+        float maxHeight = float.NegativeInfinity;
+        for (int i = 0; i < heights.Length; i++)
+        {
+            float height = heights[i];
+            vertices[i] *= height;
+            minHeight = Mathf.Min(minHeight, height);
+            maxHeight = Mathf.Max(maxHeight, height);
+        }
 
-		// Create crude tangents (vectors perpendicular to surface normal)
-		// This is needed (even though normal mapping is being done with triplanar)
-		// because surfaceshader wants normals in tangent space
-		var normals = mesh.normals;
-		var crudeTangents = new Vector4[mesh.vertices.Length];
-		for (int i = 0; i < vertices.Length; i++) {
-			Vector3 normal = normals[i];
-			crudeTangents[i] = new Vector4 (-normal.z, 0, normal.x, 1);
-		}
-		mesh.SetTangents (crudeTangents);
+        // Create mesh
+        CreateMesh(ref mesh, vertices.Length);
+        mesh.SetVertices(vertices);
+        mesh.SetTriangles(triangles, 0, true);
+        mesh.RecalculateNormals(); //
 
-		return new Vector2 (minHeight, maxHeight);
-	}
+        // Shading noise data
+        body.shading.Initialize(body.shape);
+        Vector4[] shadingData = body.shading.GenerateShadingData(vertexBuffer);
+        mesh.SetUVs(0, shadingData);
 
-	void GenerateCollisionMesh (int resolution) {
-		var (vertices, triangles) = CreateSphereVertsAndTris (resolution);
-		ComputeHelper.CreateStructuredBuffer<Vector3> (ref vertexBuffer, vertices);
+        // Create crude tangents (vectors perpendicular to surface normal)
+        // This is needed (even though normal mapping is being done with triplanar)
+        // because surfaceshader wants normals in tangent space
+        var normals = mesh.normals;
+        var crudeTangents = new Vector4[mesh.vertices.Length];
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            Vector3 normal = normals[i];
+            crudeTangents[i] = new Vector4(-normal.z, 0, normal.x, 1);
+        }
+        mesh.SetTangents(crudeTangents);
 
-		// Set heights
-		float[] heights = body.shape.CalculateHeights (vertexBuffer);
-		for (int i = 0; i < vertices.Length; i++) {
-			float height = heights[i];
-			vertices[i] *= height;
-		}
+        return new Vector2(minHeight, maxHeight);
+    }
 
-		// Create mesh
-		CreateMesh (ref collisionMesh, vertices.Length);
-		collisionMesh.vertices = vertices;
-		collisionMesh.triangles = triangles;
-	}
+    void GenerateCollisionMesh(int resolution)
+    {
+        var (vertices, triangles) = CreateSphereVertsAndTris(resolution);
+        ComputeHelper.CreateStructuredBuffer<Vector3>(ref vertexBuffer, vertices);
 
-	void CreateMesh (ref Mesh mesh, int numVertices) {
-		const int vertexLimit16Bit = 1 << 16 - 1; // 65535
-		if (mesh == null) {
-			mesh = new Mesh ();
-		} else {
-			mesh.Clear ();
-		}
-		mesh.indexFormat = (numVertices < vertexLimit16Bit) ? UnityEngine.Rendering.IndexFormat.UInt16 : UnityEngine.Rendering.IndexFormat.UInt32;
-	}
+        // Set heights
+        float[] heights = body.shape.CalculateHeights(vertexBuffer);
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            float height = heights[i];
+            vertices[i] *= height;
+        }
 
-	void DrawEditModeMesh () {
-		GameObject terrainHolder = GetOrCreateMeshObject ("Terrain Mesh", previewMesh, body.shading.terrainMaterial);
-	}
+        // Create mesh
+        CreateMesh(ref collisionMesh, vertices.Length);
+        collisionMesh.vertices = vertices;
+        collisionMesh.triangles = triangles;
+    }
 
-	// Gets child object with specified name.
-	// If it doesn't exist, then creates object with that name, adds mesh renderer/filter and attaches mesh and material
-	GameObject GetOrCreateMeshObject (string name, Mesh mesh, Material material) {
-		// Find/create object
-		var child = transform.Find (name);
-		if (!child) {
-			child = new GameObject (name).transform;
-			child.parent = transform;
-			child.localPosition = Vector3.zero;
-			child.localRotation = Quaternion.identity;
-			child.localScale = Vector3.one;
-			child.gameObject.layer = gameObject.layer;
-		}
+    void CreateMesh(ref Mesh mesh, int numVertices)
+    {
+        const int vertexLimit16Bit = 1 << 16 - 1; // 65535
+        if (mesh == null)
+        {
+            mesh = new Mesh();
+        }
+        else
+        {
+            mesh.Clear();
+        }
+        mesh.indexFormat = (numVertices < vertexLimit16Bit) ? UnityEngine.Rendering.IndexFormat.UInt16 : UnityEngine.Rendering.IndexFormat.UInt32;
+    }
 
-		// Add mesh components
-		MeshFilter filter;
-		if (!child.TryGetComponent<MeshFilter> (out filter)) {
-			filter = child.gameObject.AddComponent<MeshFilter> ();
-		}
-		filter.sharedMesh = mesh;
+    void DrawEditModeMesh()
+    {
+        GameObject terrainHolder = GetOrCreateMeshObject("Terrain Mesh", previewMesh, body.shading.terrainMaterial);
+    }
 
-		MeshRenderer renderer;
-		if (!child.TryGetComponent<MeshRenderer> (out renderer)) {
-			renderer = child.gameObject.AddComponent<MeshRenderer> ();
-		}
-		renderer.sharedMaterial = material;
+    // Gets child object with specified name.
+    // If it doesn't exist, then creates object with that name, adds mesh renderer/filter and attaches mesh and material
+    GameObject GetOrCreateMeshObject(string name, Mesh mesh, Material material)
+    {
+        // Find/create object
+        var child = transform.Find(name);
+        //var child = Terrainmesh;
+        if (!child)
+        {
+            child = new GameObject(name).transform;
+            child.parent = transform;
+            child.localPosition = Vector3.zero;
+            child.localRotation = Quaternion.identity;
+            child.localScale = Vector3.one;
+            child.gameObject.layer = gameObject.layer;
+        }
 
-		return child.gameObject;
-	}
+        // Add mesh components
+        MeshFilter filter;
+        if (!child.TryGetComponent<MeshFilter>(out filter))
+        {
+            filter = child.gameObject.AddComponent<MeshFilter>();
+        }
+        filter.sharedMesh = mesh;
 
-	public int PickTerrainRes () {
-		if (!Application.isPlaying) {
-			switch (previewMode) {
-				case PreviewMode.LOD0:
-					return resolutionSettings.lod0;
-				case PreviewMode.LOD1:
-					return resolutionSettings.lod1;
-				case PreviewMode.LOD2:
-					return resolutionSettings.lod2;
-				case PreviewMode.CollisionRes:
-					return resolutionSettings.collider;
-			}
-		}
+        MeshRenderer renderer;
+        if (!child.TryGetComponent<MeshRenderer>(out renderer))
+        {
+            renderer = child.gameObject.AddComponent<MeshRenderer>();
+        }
+        renderer.sharedMaterial = material;
 
-		return 0;
+        return child.gameObject;
+    }
 
-	}
+    public int PickTerrainRes()
+    {
+        //if (!Application.isPlaying) {
+        switch (previewMode)
+        {
+            case PreviewMode.LOD0:
+                return resolutionSettings.lod0;
+            case PreviewMode.LOD1:
+                return resolutionSettings.lod1;
+            case PreviewMode.LOD2:
+                return resolutionSettings.lod2;
+            case PreviewMode.CollisionRes:
+                return resolutionSettings.collider;
+        }
+        //}
 
-	// Radius of the ocean (0 if no ocean exists)
-	public float GetOceanRadius () {
-		if (!body.shading.hasOcean) {
-			return 0;
-		}
-		return UnscaledOceanRadius * BodyScale;
-	}
+        return 0;
 
-	float UnscaledOceanRadius {
-		get {
-			return Mathf.Lerp (heightMinMax.x, 1, body.shading.oceanLevel);
-		}
-	}
+    }
 
-	public float BodyScale {
-		get {
-			// Body radius is determined by the celestial body class,
-			// which sets the local scale of the generator object (this object)
-			return transform.localScale.x;
-		}
-	}
+    // Radius of the ocean (0 if no ocean exists)
+    public float GetOceanRadius()
+    {
+        if (!body.shading.hasOcean)
+        {
+            return 0;
+        }
+        return UnscaledOceanRadius * BodyScale;
+    }
 
-	// Generate sphere (or reuse if already generated) and return a copy of the vertices and triangles
-	(Vector3[] vertices, int[] triangles) CreateSphereVertsAndTris (int resolution) {
-		if (sphereGenerators == null) {
-			sphereGenerators = new Dictionary<int, SphereMesh> ();
-		}
+    float UnscaledOceanRadius
+    {
+        get
+        {
+            return Mathf.Lerp(heightMinMax.x, 1, body.shading.oceanLevel);
+        }
+    }
 
-		if (!sphereGenerators.ContainsKey (resolution)) {
-			sphereGenerators.Add (resolution, new SphereMesh (resolution));
-		}
+    public float BodyScale
+    {
+        get
+        {
+            // Body radius is determined by the celestial body class,
+            // which sets the local scale of the generator object (this object)
+            return transform.localScale.x;
+        }
+    }
 
-		var generator = sphereGenerators[resolution];
+    // Generate sphere (or reuse if already generated) and return a copy of the vertices and triangles
+    (Vector3[] vertices, int[] triangles) CreateSphereVertsAndTris(int resolution)
+    {
+        if (sphereGenerators == null)
+        {
+            sphereGenerators = new Dictionary<int, SphereMesh>();
+        }
 
-		var vertices = new Vector3[generator.Vertices.Length];
-		var triangles = new int[generator.Triangles.Length];
-		System.Array.Copy (generator.Vertices, vertices, vertices.Length);
-		System.Array.Copy (generator.Triangles, triangles, triangles.Length);
-		return (vertices, triangles);
-	}
+        if (!sphereGenerators.ContainsKey(resolution))
+        {
+            sphereGenerators.Add(resolution, new SphereMesh(resolution));
+        }
 
-	void ReleaseAllBuffers () {
-		ComputeHelper.Release (vertexBuffer);
-		if (body.shape) {
-			body.shape.ReleaseBuffers ();
-		}
-		if (body.shading) {
-			body.shading.ReleaseBuffers ();
-		}
-	}
+        var generator = sphereGenerators[resolution];
 
-	void OnDestroy () {
-		ReleaseAllBuffers ();
-	}
+        var vertices = new Vector3[generator.Vertices.Length];
+        var triangles = new int[generator.Triangles.Length];
+        System.Array.Copy(generator.Vertices, vertices, vertices.Length);
+        System.Array.Copy(generator.Triangles, triangles, triangles.Length);
+        return (vertices, triangles);
+    }
 
-	bool CanGenerateMesh () {
-		return ComputeHelper.CanRunEditModeCompute && body.shape && body.shape.heightMapCompute;
-	}
+    void ReleaseAllBuffers()
+    {
+        ComputeHelper.Release(vertexBuffer);
+        if (body.shape)
+        {
+            body.shape.ReleaseBuffers();
+        }
+        if (body.shading)
+        {
+            body.shading.ReleaseBuffers();
+        }
+    }
 
-	void LogTimer (System.Diagnostics.Stopwatch sw, string text) {
-		if (logTimers) {
-			Debug.Log (text + " " + sw.ElapsedMilliseconds + " ms.");
-		}
-	}
+    void OnDestroy()
+    {
+        ReleaseAllBuffers();
+    }
 
-	bool InGameMode {
-		get {
-			return Application.isPlaying;
-		}
-	}
+    bool CanGenerateMesh()
+    {
+        return /*ComputeHelper.CanRunEditModeCompute &&*/ body.shape && body.shape.heightMapCompute;
+    }
 
-	bool InEditMode {
-		get {
-			return !Application.isPlaying;
-		}
-	}
+    void LogTimer(System.Diagnostics.Stopwatch sw, string text)
+    {
+        if (logTimers)
+        {
+            //Debug.Log (text + " " + sw.ElapsedMilliseconds + " ms.");
+        }
+    }
 
-	public class TerrainData {
-		public float[] heights;
-		public Vector4[] uvs;
-	}
+    bool InGameMode
+    {
+        get
+        {
+            return Application.isPlaying;
+        }
+    }
 
-	[System.Serializable]
-	public class ResolutionSettings {
+    bool InEditMode
+    {
+        get
+        {
+            return !Application.isPlaying;
+        }
+    }
 
-		public const int numLODLevels = 3;
-		const int maxAllowedResolution = 500;
+    public class TerrainData
+    {
+        public float[] heights;
+        public Vector4[] uvs;
+    }
 
-		public int lod0 = 300;
-		public int lod1 = 100;
-		public int lod2 = 50;
-		public int collider = 100;
+    [System.Serializable]
+    public class ResolutionSettings
+    {
 
-		public int GetLODResolution (int lodLevel) {
-			switch (lodLevel) {
-				case 0:
-					return lod0;
-				case 1:
-					return lod1;
-				case 2:
-					return lod2;
-			}
-			return lod2;
-		}
+        public const int numLODLevels = 3;
+        const int maxAllowedResolution = 500;
 
-		public void ClampResolutions () {
-			lod0 = Mathf.Min (maxAllowedResolution, lod0);
-			lod1 = Mathf.Min (maxAllowedResolution, lod1);
-			lod2 = Mathf.Min (maxAllowedResolution, lod2);
-			collider = Mathf.Min (maxAllowedResolution, collider);
-		}
-	}
+        public int lod0 = 300;
+        public int lod1 = 100;
+        public int lod2 = 50;
+        public int collider = 100;
+
+        public int GetLODResolution(int lodLevel)
+        {
+            switch (lodLevel)
+            {
+                case 0:
+                    return lod0;
+                case 1:
+                    return lod1;
+                case 2:
+                    return lod2;
+            }
+            return lod2;
+        }
+
+        public void ClampResolutions()
+        {
+            lod0 = Mathf.Min(maxAllowedResolution, lod0);
+            lod1 = Mathf.Min(maxAllowedResolution, lod1);
+            lod2 = Mathf.Min(maxAllowedResolution, lod2);
+            collider = Mathf.Min(maxAllowedResolution, collider);
+        }
+    }
 
 }
