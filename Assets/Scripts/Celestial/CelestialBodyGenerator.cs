@@ -15,6 +15,7 @@ public class CelestialBodyGenerator : MonoBehaviour
 
 	public CelestialBodySettings body;
 
+
 	bool debugDoubleUpdate = true;
 	int debug_numUpdates;
 

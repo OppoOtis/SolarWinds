@@ -17,6 +17,9 @@ public abstract class CelestialBodyShape : ScriptableObject {
 
 	ComputeBuffer heightBuffer;
 
+	public CelestialBodyShape() { 
+		
+	}
 	public virtual float[] CalculateHeights (ComputeBuffer vertexBuffer) {
 		//Debug.Log (System.Environment.StackTrace);
 		// Set data

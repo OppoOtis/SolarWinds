@@ -1,15 +1,49 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
+using UnityEngine.InputSystem;
 
 public class PlanetGeneration : MonoBehaviour
 {
-
     public GameObject prefab;
     public GameObject vader;
     public PlanetManager pm;
-    void Update()
+    public GameObject star;
+
+    public CelestialBodySettings[] body;
+    public CelestialBodyShape[] shape;
+    public CelestialBodyShading[] shading;
+
+    public GameObject leftHand;
+    public GameObject rightHand;
+
+    public bool punchingStar;
+    public Vector3 oldLeftPosition;
+    public Vector3 oldRightPosition;
+
+    public void OnTriggerEnter(Collider other)
     {
-        //Well this needs to be changed to a button or some shit, probably even out of update to a dedotated handler TODO
+        Debug.Log("Ziet collider");
+        if (other.CompareTag("Hands"))
+        {
+            punchingStar = true;
+        }
+    }
+    private void Update()
+    {
+        float leftSpeed = Vector3.Distance(oldLeftPosition, leftHand.transform.position);
+        float rightSpeed = Vector3.Distance(oldRightPosition, rightHand.transform.position);
+        if (punchingStar)
+        {
+            if(leftSpeed >= 0.025f || rightSpeed >= 0.025f)
+            {
+                GeneratePlanet(vader);
+            }
+            punchingStar = false;
+        }
+        oldLeftPosition = leftHand.transform.position;
+        oldRightPosition = rightHand.transform.position;
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             GeneratePlanet(vader);
@@ -29,23 +63,46 @@ public class PlanetGeneration : MonoBehaviour
         pm.AddPlanetToList(target);
     }
 
+    void SetupMesh(GameObject g)
+    {
+        CelestialBodyGenerator jennyTheGenny = g.GetComponent<PlanetPhysics>().planetInteractable.GetComponent<CelestialBodyGenerator>();
+        jennyTheGenny.OnShapeSettingChanged();
+        //CopyAllSciptObjs(g);
+        //jennyTheGenny.OnShapeSettingChanged();
+        int randPlanetSettings = Random.Range(0, body.Length);
+        CelestialBodySettings newSettings = Instantiate(body[randPlanetSettings]);
+        CelestialBodyShape newShape = Instantiate(shape[randPlanetSettings]);
+        CelestialBodyShading newShading = Instantiate(shading[randPlanetSettings]);
+        newSettings.shape = newShape;
+        newSettings.shading = newShading;
+        jennyTheGenny.body = newSettings;
+
+        var prng = new System.Random();
+        jennyTheGenny.body.shading.randomize = true;
+        jennyTheGenny.body.shape.randomize = true;
+        jennyTheGenny.body.shape.seed = prng.Next(-10000, 10000);
+        jennyTheGenny.body.shading.seed = prng.Next(-10000, 10000);
+        Regenerate(jennyTheGenny);
+    }
+    void Regenerate(CelestialBodyGenerator generator)
+    {
+        generator.OnShapeSettingChanged();
+        generator.OnShadingNoiseSettingChanged();
+        EditorApplication.QueuePlayerLoopUpdate();
+    }
+
     void SetupPhysics(GameObject g) //TODO
     {
         PlanetPhysics pp = g.GetComponent<PlanetPhysics>();
-        pp.distanceFromSun = pm.furthestPlanetDistance + 12f;
-    }
-
-    void SetupMesh(GameObject g)
-    {
-        CelestialBodyGenerator jennyTheGenny = g.GetComponent<PlanetPhysics>().planetMesh.GetComponent<CelestialBodyGenerator>();
-        jennyTheGenny.OnShapeSettingChanged();
-        //CopyAllSciptObjs(g);
-        jennyTheGenny.OnShapeSettingChanged();
+        pp.distanceFromSun = Random.Range(10, 50);
+        pp.orbitSpeed = Random.Range(10, 500);
+        pp.orbitYaw = Random.Range(0, 360);
+        pp.orbitPitch = Random.Range(0, 360);
     }
 
     void CopyAllSciptObjs(GameObject g)
     {
-        ScriptableObject[] ss = g.GetComponent<PlanetPhysics>().planetMesh.GetComponents<ScriptableObject>();
+        ScriptableObject[] ss = g.GetComponent<PlanetPhysics>().planetInteractable.GetComponents<ScriptableObject>();
         for (int i = 0; i < ss.Length; i++)
         {
             ss[i] = Instantiate(ss[i]);

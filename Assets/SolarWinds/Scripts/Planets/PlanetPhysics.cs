@@ -27,6 +27,9 @@ public class PlanetPhysics : MonoBehaviour
     [Range(0f, 1000f)]
     public float distanceFromSun = 5;
 
+    [Range(0f, 10f)]
+    public float lerpSpeed = 0.5f;
+
     private void Update()
     {
         orbitYawPivot.transform.localRotation = Quaternion.Euler(0, orbitYaw, 0);
@@ -38,7 +41,11 @@ public class PlanetPhysics : MonoBehaviour
         }
         if (!dontMoveInteractable)
         {
-            planetInteractable.transform.position = planetMesh.transform.position;
+            planetInteractable.transform.position = Vector3.Lerp(planetInteractable.transform.position, planetMesh.transform.position, Time.deltaTime * lerpSpeed);
+        }
+        else
+        {
+            orbitPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
         }
         dontMoveInteractable = true;
 

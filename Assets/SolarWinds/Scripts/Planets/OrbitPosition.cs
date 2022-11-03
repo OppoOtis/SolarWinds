@@ -22,7 +22,7 @@ public class OrbitPosition : MonoBehaviour
     {
         planetPhysics.dontMoveInteractable = true;
         Vector3 centerVector = transform.position;
-        distance = Vector3.Distance(planetInteractable.transform.position, transform.position);
+        distance = Vector3.Distance(planetInteractable.transform.position, transform.position) / transform.parent.localScale.x;
         planetPhysics.orbitYaw = centerPoint.transform.rotation.eulerAngles.y;
         planetPhysics.orbitPitch = centerPoint.transform.rotation.eulerAngles.x;
         planetPhysics.distanceFromSun = distance;
