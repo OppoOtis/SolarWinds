@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
 using UnityEngine.InputSystem;
 
 public class PlanetGeneration : MonoBehaviour
@@ -88,7 +87,7 @@ public class PlanetGeneration : MonoBehaviour
     {
         generator.OnShapeSettingChanged();
         generator.OnShadingNoiseSettingChanged();
-        EditorApplication.QueuePlayerLoopUpdate();
+        //EditorApplication.QueuePlayerLoopUpdate();
     }
 
     void SetupPhysics(GameObject g) //TODO
