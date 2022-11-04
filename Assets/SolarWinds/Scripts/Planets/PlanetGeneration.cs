@@ -20,6 +20,8 @@ public class PlanetGeneration : MonoBehaviour
     public Vector3 oldLeftPosition;
     public Vector3 oldRightPosition;
 
+    public MusicManager MusicManager;
+
     public void OnTriggerEnter(Collider other)
     {
         Debug.Log("Ziet collider");
@@ -82,6 +84,8 @@ public class PlanetGeneration : MonoBehaviour
         jennyTheGenny.body.shape.seed = prng.Next(-10000, 10000);
         jennyTheGenny.body.shading.seed = prng.Next(-10000, 10000);
         Regenerate(jennyTheGenny);
+
+        MusicManager.AddChannel();
     }
     void Regenerate(CelestialBodyGenerator generator)
     {
