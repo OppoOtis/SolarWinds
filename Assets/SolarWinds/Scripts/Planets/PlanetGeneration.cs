@@ -38,7 +38,10 @@ public class PlanetGeneration : MonoBehaviour
         {
             if(leftSpeed >= 0.025f || rightSpeed >= 0.025f)
             {
-                GeneratePlanet(vader);
+                if(pm.planets.Count < 12)
+                {
+                    GeneratePlanet(vader);
+                }
             }
             punchingStar = false;
         }
@@ -47,7 +50,10 @@ public class PlanetGeneration : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            GeneratePlanet(vader);
+            if (pm.planets.Count < 12)
+            {
+                GeneratePlanet(vader);
+            }
         }
     }
 
@@ -67,6 +73,7 @@ public class PlanetGeneration : MonoBehaviour
     void SetupMesh(GameObject g)
     {
         CelestialBodyGenerator jennyTheGenny = g.GetComponent<PlanetPhysics>().planetInteractable.GetComponent<CelestialBodyGenerator>();
+        g.GetComponent<PlanetPhysics>().timeValue = 1;
         jennyTheGenny.OnShapeSettingChanged();
         //CopyAllSciptObjs(g);
         //jennyTheGenny.OnShapeSettingChanged();
@@ -86,6 +93,7 @@ public class PlanetGeneration : MonoBehaviour
         Regenerate(jennyTheGenny);
 
         MusicManager.AddChannel();
+        g.GetComponent<PlanetPhysics>().timeValue = pm.timeValue;
     }
     void Regenerate(CelestialBodyGenerator generator)
     {

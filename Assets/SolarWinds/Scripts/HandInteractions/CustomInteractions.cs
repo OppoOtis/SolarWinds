@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.XR.Interaction.Toolkit.Inputs;
 
 public class CustomInteractions : MonoBehaviour
 {
@@ -9,6 +11,7 @@ public class CustomInteractions : MonoBehaviour
     public InputActionProperty gripLeftInputAction;
     public InputActionProperty pinchRightInputAction;
     public InputActionProperty gripRightInputAction;
+    public InputActionProperty rightHandSnapTurnAction;
 
     public GameObject leftControler;
     public GameObject rightControler;
@@ -23,7 +26,7 @@ public class CustomInteractions : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        rightHandSnapTurnAction.EnableDirectAction();
     }
 
     // Update is called once per frame
@@ -31,9 +34,14 @@ public class CustomInteractions : MonoBehaviour
     {
         float triggerLeftValue = pinchLeftInputAction.action.ReadValue<float>();
         float triggerRightValue = pinchRightInputAction.action.ReadValue<float>();
+        Vector2 rightHandValue = rightHandSnapTurnAction.action.ReadValue<Vector2>();
+        Debug.Log(rightHandValue);
         float gripLeftValue = gripLeftInputAction.action.ReadValue<float>();
         float gripRightValue = gripRightInputAction.action.ReadValue<float>();
-
+        if(rightHandValue.x < -0.1f || rightHandValue.x > 0.1f)
+        {
+            starSystem.GetComponent<PlanetManager>().UpdateTime(rightHandValue.x);
+        }
         if(triggerLeftValue > 0.95f && triggerRightValue > 0.95f)
         {
             leftControler.GetComponent<SphereCollider>().enabled = false;
@@ -49,6 +57,22 @@ public class CustomInteractions : MonoBehaviour
             leftControler.GetComponent<SphereCollider>().enabled = true;
             rightControler.GetComponent<SphereCollider>().enabled = true;
             canScale = false;
+            int small = 0;
+            if(starSystem.transform.localScale.x < 0.01f)
+            {
+                small = 2;
+                starSystem.GetComponent<PlanetManager>().UpdateLOD(small);
+            }
+            else if(starSystem.transform.localScale.x < 0.1f)
+            {
+                small = 1;
+                starSystem.GetComponent<PlanetManager>().UpdateLOD(small);
+            }
+            else
+            {
+                small = 0;
+                starSystem.GetComponent<PlanetManager>().UpdateLOD(small);
+            }
         }
     }
 
@@ -60,6 +84,7 @@ public class CustomInteractions : MonoBehaviour
             startingMidpointPosition = Vector3.Lerp(leftControler.transform.position, rightControler.transform.position, 0.5f);
             startingScale = starSystem.transform.localScale;
             startingHeightPosition = starSystem.transform.position.y;
+            starSystem.GetComponent<PlanetManager>().updatedLOD = false;
             canScale = true;
         }
         float currentDistance = Vector3.Distance(leftControler.transform.position, rightControler.transform.position);
@@ -73,7 +98,7 @@ public class CustomInteractions : MonoBehaviour
         ScaleAround(starSystem, startingMidpointPosition, finalScale);
         float distanceBetweenMidpoints = currentMidpointPosition.y - startingMidpointPosition.y;
         //distanceBetweenMidpoints = Mathf.Abs(distanceBetweenMidpoints);
-        starSystem.transform.position = new Vector3(starSystem.transform.position.x, startingHeightPosition + distanceBetweenMidpoints, starSystem.transform.position.z);
+        //starSystem.transform.position = new Vector3(starSystem.transform.position.x, startingHeightPosition + distanceBetweenMidpoints, starSystem.transform.position.z);
     }
 
     public void ScaleAround(GameObject target, Vector3 pivot, Vector3 newScale)

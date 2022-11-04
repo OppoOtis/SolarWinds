@@ -392,9 +392,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resolutionSettings:
-    lod0: 300
-    lod1: 100
-    lod2: 50
+    lod0: 128
+    lod1: 64
+    lod2: 32
     collider: 100
   previewMode: 0
   Terrainmesh: {fileID: 0}
