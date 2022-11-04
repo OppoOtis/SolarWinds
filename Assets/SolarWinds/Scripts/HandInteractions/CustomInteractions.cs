@@ -23,6 +23,8 @@ public class CustomInteractions : MonoBehaviour
     public Vector3 startingMidpointPosition;
     public float startingHeightPosition;
     public Vector3 startingScale;
+
+    public bool canChange = true;
     // Start is called before the first frame update
     void Start()
     {
@@ -57,21 +59,24 @@ public class CustomInteractions : MonoBehaviour
             leftControler.GetComponent<SphereCollider>().enabled = true;
             rightControler.GetComponent<SphereCollider>().enabled = true;
             canScale = false;
-            int small = 0;
-            if(starSystem.transform.localScale.x < 0.01f)
+            if (canChange)
             {
-                small = 2;
-                starSystem.GetComponent<PlanetManager>().UpdateLOD(small);
-            }
-            else if(starSystem.transform.localScale.x < 0.1f)
-            {
-                small = 1;
-                starSystem.GetComponent<PlanetManager>().UpdateLOD(small);
-            }
-            else
-            {
-                small = 0;
-                starSystem.GetComponent<PlanetManager>().UpdateLOD(small);
+                int small = 0;
+                if (starSystem.transform.localScale.x < 0.01f)
+                {
+                    small = 2;
+                    starSystem.GetComponent<PlanetManager>().UpdateLOD(small);
+                }
+                else if (starSystem.transform.localScale.x < 0.1f)
+                {
+                    small = 1;
+                    starSystem.GetComponent<PlanetManager>().UpdateLOD(small);
+                }
+                else
+                {
+                    small = 0;
+                    starSystem.GetComponent<PlanetManager>().UpdateLOD(small);
+                }
             }
         }
     }

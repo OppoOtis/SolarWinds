@@ -26,7 +26,6 @@ public class PlanetPhysics : MonoBehaviour
     [Range(-45f, 45f)]
     public float rotationPitch = 0;
 
-    [Range(0f, 1000f)]
     public float distanceFromSun = 5;
 
     [Range(0f, 10f)]

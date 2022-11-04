@@ -22,12 +22,17 @@ public class PlanetGeneration : MonoBehaviour
 
     public MusicManager MusicManager;
 
+    public bool canCreatePlanet = true;
+
     public void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Ziet collider");
-        if (other.CompareTag("Hands"))
+        if (canCreatePlanet)
         {
-            punchingStar = true;
+            Debug.Log("Ziet collider");
+            if (other.CompareTag("Hands"))
+            {
+                punchingStar = true;
+            }
         }
     }
     private void Update()

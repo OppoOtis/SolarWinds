@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlanetManager : MonoBehaviour
 {
     public List<GameObject> planets;
+    public List<GameObject> customPlanets;
 
     public GameObject furthestPlanet;
     public float furthestPlanetDistance;
@@ -16,6 +17,10 @@ public class PlanetManager : MonoBehaviour
     private void Start()
     {
         planets = new List<GameObject>();
+        foreach (GameObject planet in customPlanets)
+        {
+            planet.GetComponent<PlanetPhysics>().timeValue = timeValue;
+        }
     }
 
     public void UpdateTime(float value)
@@ -26,6 +31,10 @@ public class PlanetManager : MonoBehaviour
             timeValue = 0.001f;
         }
         foreach(GameObject planet in planets)
+        {
+            planet.GetComponent<PlanetPhysics>().timeValue = timeValue;
+        }
+        foreach (GameObject planet in customPlanets)
         {
             planet.GetComponent<PlanetPhysics>().timeValue = timeValue;
         }
