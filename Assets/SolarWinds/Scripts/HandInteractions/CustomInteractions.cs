@@ -37,7 +37,6 @@ public class CustomInteractions : MonoBehaviour
         float triggerLeftValue = pinchLeftInputAction.action.ReadValue<float>();
         float triggerRightValue = pinchRightInputAction.action.ReadValue<float>();
         Vector2 rightHandValue = rightHandSnapTurnAction.action.ReadValue<Vector2>();
-        Debug.Log(rightHandValue);
         float gripLeftValue = gripLeftInputAction.action.ReadValue<float>();
         float gripRightValue = gripRightInputAction.action.ReadValue<float>();
         if(rightHandValue.x < -0.1f || rightHandValue.x > 0.1f)
@@ -90,6 +89,7 @@ public class CustomInteractions : MonoBehaviour
             startingScale = starSystem.transform.localScale;
             startingHeightPosition = starSystem.transform.position.y;
             starSystem.GetComponent<PlanetManager>().updatedLOD = false;
+
             canScale = true;
         }
         float currentDistance = Vector3.Distance(leftControler.transform.position, rightControler.transform.position);
@@ -102,6 +102,12 @@ public class CustomInteractions : MonoBehaviour
         Vector3 finalScale =  new Vector3(startingScale.x * newScaleValue,startingScale.y * newScaleValue, startingScale.y * newScaleValue);
         ScaleAround(starSystem, startingMidpointPosition, finalScale);
         float distanceBetweenMidpoints = currentMidpointPosition.y - startingMidpointPosition.y;
+        Debug.Log("other");
+        foreach (GameObject planet in starSystem.GetComponent<PlanetManager>().customPlanets)
+        {
+            Debug.Log("other");
+            planet.GetComponent<PlanetPhysics>().planetInteractable.GetComponent<PlanetScaler>().ScalePlanets();
+        }
         //distanceBetweenMidpoints = Mathf.Abs(distanceBetweenMidpoints);
         //starSystem.transform.position = new Vector3(starSystem.transform.position.x, startingHeightPosition + distanceBetweenMidpoints, starSystem.transform.position.z);
     }

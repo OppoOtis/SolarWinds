@@ -28,11 +28,17 @@ public class PlanetPhysics : MonoBehaviour
 
     public float distanceFromSun = 5;
 
-    [Range(0f, 10f)]
     public float lerpSpeed = 0.5f;
+    public bool customPlanet = false;
+    public float customLerpSpeed = 1;
 
     private void Update()
     {
+        //float lerpSp = 1;
+        if (customPlanet)
+        {
+            //lerpSp = customLerpSpeed;
+        }
         orbitYawPivot.transform.localRotation = Quaternion.Euler(0, orbitYaw, 0);
         orbitPitchPivot.transform.localRotation = Quaternion.Euler(orbitPitch, 0, 0);
         if (gameObject.GetComponent<OrbitPosition>().isActiveAndEnabled == false)
@@ -42,7 +48,19 @@ public class PlanetPhysics : MonoBehaviour
         }
         if (!dontMoveInteractable)
         {
-            planetInteractable.transform.position = Vector3.Lerp(planetInteractable.transform.position, planetMesh.transform.position, Time.deltaTime * lerpSpeed * timeValue);
+            if (customPlanet)
+            {
+                if (lerpSpeed < 50f)
+                {
+                    lerpSpeed = 500f;
+                }
+                //planetInteractable.transform.position = Vector3.Lerp(planetInteractable.transform.position, planetMesh.transform.position, Time.deltaTime * (lerpSpeed * lerpSp) * timeV);
+                planetInteractable.transform.position = Vector3.Lerp(planetInteractable.transform.position, planetMesh.transform.position, Time.deltaTime * lerpSpeed);
+            }
+            else
+            {
+                planetInteractable.transform.position = Vector3.Lerp(planetInteractable.transform.position, planetMesh.transform.position, Time.deltaTime * lerpSpeed * timeValue);
+            }
         }
         else
         {
