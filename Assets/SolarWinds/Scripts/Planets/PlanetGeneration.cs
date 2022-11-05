@@ -28,7 +28,6 @@ public class PlanetGeneration : MonoBehaviour
     {
         if (canCreatePlanet)
         {
-            Debug.Log("Ziet collider");
             if (other.CompareTag("Hands"))
             {
                 punchingStar = true;
