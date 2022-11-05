@@ -11,8 +11,10 @@ public class PlanetPhysics : MonoBehaviour
     public GameObject centerPitchPivot;
     public GameObject planetMesh;
     public GameObject planetInteractable;
+    public PlanetManager planetManager;
 
     public bool dontMoveInteractable;
+    public bool runOnce = true;
 
     public float timeValue;
 
@@ -32,15 +34,27 @@ public class PlanetPhysics : MonoBehaviour
     public bool customPlanet = false;
     public float customLerpSpeed = 1;
 
+    private void Start()
+    {
+        orbitYawPivot.transform.localRotation = Quaternion.Euler(0, orbitYaw, 0);
+        orbitPitchPivot.transform.localRotation = Quaternion.Euler(orbitPitch, 0, 0);
+        centerPivot.transform.localPosition = new Vector3(0, 0, distanceFromSun);
+    }
     private void Update()
     {
+        timeValue = planetManager.timeValue;
         //float lerpSp = 1;
         if (customPlanet)
         {
             //lerpSp = customLerpSpeed;
         }
-        orbitYawPivot.transform.localRotation = Quaternion.Euler(0, orbitYaw, 0);
-        orbitPitchPivot.transform.localRotation = Quaternion.Euler(orbitPitch, 0, 0);
+        if (runOnce)
+        {
+            orbitYawPivot.transform.localRotation = Quaternion.Euler(0, orbitYaw, 0);
+            orbitPitchPivot.transform.localRotation = Quaternion.Euler(orbitPitch, 0, 0);
+            centerPivot.transform.localPosition = new Vector3(0, 0, distanceFromSun);
+            runOnce = false;
+        }
         if (gameObject.GetComponent<OrbitPosition>().isActiveAndEnabled == false)
         {
             orbitPivot.transform.Rotate(new Vector3(0, (orbitSpeed/100) * timeValue, 0) * Time.deltaTime);
@@ -65,6 +79,7 @@ public class PlanetPhysics : MonoBehaviour
         else
         {
             orbitPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
+            runOnce = true;
         }
         dontMoveInteractable = true;
 
@@ -72,7 +87,5 @@ public class PlanetPhysics : MonoBehaviour
         //centerPivot.transform.Rotate(new Vector3(0, (-orbitSpeed/100) * timeValue, 0) * Time.deltaTime);
         //centerPitchPivot.transform.localRotation = Quaternion.Euler(0, 0, rotationPitch);
         //planetMesh.transform.Rotate(new Vector3(0, rotationSpeed/100, 0) * Time.deltaTime);
-
-        centerPivot.transform.localPosition = new Vector3(0, 0, distanceFromSun);
     }
 }
